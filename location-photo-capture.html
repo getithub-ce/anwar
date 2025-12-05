@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Capture Location & Photo</title>
+    <style>
+      body { font-family: sans-serif; margin: 2em; background: #f8f9fa; }
+      h1 { color: #2b2f32; }
+      button { margin: 1em 0; padding: 0.5em 1em; font-size: 1em; }
+      #photo { display: block; margin-top: 1em; border: 1px solid #ccc; }
+      #location { margin-bottom: 1em; }
+      #video, #canvas { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Share your location and take a photo</h1>
+    <button id="locate-btn">Get Location</button>
+    <p id="location"></p>
+    <button id="photo-btn">Take Photo</button>
+    <video id="video" autoplay playsinline width="320" height="240"></video>
+    <canvas id="canvas" width="320" height="240"></canvas>
+    <img id="photo" alt="Your photo will appear here">
+    
+    <script>
+      // Location capture
+      document.getElementById('locate-btn').onclick = function() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            document.getElementById('location').textContent =
+              `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`;
+          }, function(error) {
+            alert('Error getting location: ' + error.message);
+          });
+        } else {
+          alert("Geolocation is not supported by your browser.");
+        }
+      };
+
+      // Photo capture
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const photo = document.getElementById('photo');
+      document.getElementById('photo-btn').onclick = async function() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" }
+          });
+          video.srcObject = stream;
+          video.style.display = 'block';
+          
+          // Wait for camera to initialize before capture
+          setTimeout(() => {
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            photo.src = canvas.toDataURL('image/png');
+            photo.style.display = 'block';
+            video.style.display = 'none';
+            stream.getTracks().forEach(track => track.stop());
+          }, 2000); // 2 seconds; adjust if needed
+        } catch (e) {
+          alert('Could not access camera: ' + e);
+        }
+      };
+    </script>
+  </body>
+</html>
